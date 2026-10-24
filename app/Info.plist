@@ -6,6 +6,8 @@
   <string>zh-Hans</string>
   <key>CFBundleExecutable</key>
   <string>SteamRobot</string>
+  <key>CFBundleIconFile</key>
+  <string>AppIcon</string>
   <key>CFBundleIdentifier</key>
   <string>local.steam.bot.management</string>
   <key>CFBundleInfoDictionaryVersion</key>

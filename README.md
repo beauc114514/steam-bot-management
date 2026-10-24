@@ -17,7 +17,7 @@
 APP="Steam机器人.app"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp app/Info.plist "$APP/Contents/Info.plist"
-cp app/index.html app/crypto.js "$APP/Contents/Resources/"
+cp app/index.html app/crypto.js app/AppIcon.icns "$APP/Contents/Resources/"
 swiftc -O -o "$APP/Contents/MacOS/SteamRobot" app/main.swift -framework Cocoa -framework WebKit
 codesign --force --sign - "$APP"
 open "$APP"
