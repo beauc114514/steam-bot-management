@@ -1,0 +1,19 @@
+.DS_Store
+.idea/
+
+# 账号、密码、shared_secret、SteamID、昵称
+# data/steam-bot-management.json 与 data/steam-bot-management-last100.json 都在这里
+data/
+*.json
+!proxy.example.json
+
+# 真实代理账号只留在本机
+proxy.local.json
+
+# 本地编出来的应用，包内带有同一份账号数据
+*.app
+
+# 临时文件
+*.tmp
+*.log
+.write.lock

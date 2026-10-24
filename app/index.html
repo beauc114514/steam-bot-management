@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Steam 机器人账号</title>
+  <style>
+    :root {
+      --bg: #efece6;
+      --surface: #fffcf8;
+      --ink: #1c1915;
+      --muted: #6d675f;
+      --line: #e4dfd6;
+      --plate: #f6f1e8;
+      --accent: #0e7a52;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      overflow: hidden;
+      color: var(--ink);
+      background: var(--bg);
+      font: 14px/1.45 "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", sans-serif;
+    }
+    main {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    header, .toolbar, .pager { flex-shrink: 0; }
+    header {
+      display: flex;
+      align-items: flex-end;
+      padding: 20px 28px 16px;
+      background: var(--surface);
+      color: var(--ink);
+      border-bottom: 1px solid var(--line);
+    }
+    h1 { margin: 0; font-size: 26px; font-weight: 650; letter-spacing: -0.04em; }
+    .summary { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+    .toolbar { display: flex; gap: 8px; margin: 16px 28px 12px; }
+    input, select, button { font: inherit; color: inherit; }
+    input[type="search"], select {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      padding: 9px 12px;
+    }
+    input[type="search"] { flex: 1; }
+    .table-wrap {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      margin: 0 28px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+    }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--surface); }
+    th, td {
+      padding: 12px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--line);
+      white-space: nowrap;
+      background: var(--surface);
+      vertical-align: top;
+    }
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      height: 40px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+      vertical-align: middle;
+      background: #faf7f2;
+    }
+    .pin { position: sticky; z-index: 1; }
+    thead .pin { z-index: 3; background: #faf7f2; }
+    .pin-id { left: 0; width: 52px; min-width: 52px; }
+    .pin-account {
+      left: 52px;
+      width: 392px;
+      min-width: 392px;
+      max-width: 392px;
+      box-shadow: 1px 0 0 var(--line);
+    }
+    td.pin-account { white-space: normal; }
+    .who { display: flex; flex-direction: column; gap: 10px; }
+    .who-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .who-name { font-size: 17px; font-weight: 650; letter-spacing: -0.03em; }
+    .who-cols {
+      display: grid;
+      grid-template-columns: 19ch minmax(0, 1fr);
+      background: var(--plate);
+      padding: 8px 10px;
+    }
+    .who-cols > div + div { padding-left: 12px; border-left: 1px solid #e5dfd4; }
+    .who-k { margin-bottom: 3px; color: var(--muted); font-size: 12px; }
+    .who-id, .who-nick {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      height: 20px;
+      color: var(--ink);
+      font-size: 13px;
+    }
+    .who-id span, .who-nick { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    td.marks-cell { white-space: normal; }
+    .marks { display: flex; flex-direction: column; gap: 8px; width: 232px; }
+    .tag-row { display: flex; gap: 6px; }
+    button.tag {
+      border: 0;
+      min-width: 46px;
+      height: 26px;
+      padding: 0 8px;
+      background: #efece6;
+      color: #5e584f;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    button.tag.on { background: #1c1915; color: #f6f1e8; font-weight: 650; }
+    button.tag:hover { background: #e4dfd4; }
+    button.tag.on:hover { background: #000; }
+    input.remark {
+      width: 100%;
+      padding: 6px 8px;
+      font-size: 13px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+    }
+    input.remark::placeholder { color: #a39d93; }
+    .mono { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; }
+    .code {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      min-width: 108px;
+      height: 40px;
+      padding: 0 8px;
+      background: #3a342c;
+      color: #f6f1e8;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+    }
+    .code-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 100%;
+      background: #3ddc97;
+      transition: width 0.25s linear;
+    }
+    .code-text { position: relative; z-index: 1; text-shadow: 0 1px 0 rgba(28, 25, 21, 0.45); }
+    button.copy {
+      flex: none;
+      height: 22px;
+      padding: 0 8px;
+      border: 1px solid #d9d3c8;
+      background: #fff;
+      color: #3d3832;
+      font-size: 12px;
+      line-height: 20px;
+      cursor: pointer;
+    }
+    button.copy:hover { border-color: #1c1915; color: #1c1915; }
+    button.copy:active { background: #1c1915; color: #fff; }
+    .pager {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin: 12px 28px 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .pager-actions { display: flex; gap: 8px; align-items: center; }
+    button.nav {
+      height: 32px;
+      padding: 0 14px;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      cursor: pointer;
+      color: var(--ink);
+    }
+    button.nav:hover:not(:disabled) { border-color: #1c1915; }
+    button.nav:disabled { opacity: 0.4; cursor: default; }
+    .empty { padding: 28px; text-align: center; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>Steam 机器人</h1>
+        <p class="summary" id="summary">正在加载</p>
+      </div>
+    </header>
+    <div class="toolbar">
+      <input id="q" type="search" placeholder="按账号或备注筛选" autocomplete="off">
+      <select id="pageSize">
+        <option value="10">每页 10 条</option>
+        <option value="20">每页 20 条</option>
+        <option value="40" selected>每页 40 条</option>
+        <option value="50">每页 50 条</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="pin pin-id">ID</th>
+            <th class="pin pin-account">账号</th>
+            <th>标记</th>
+            <th>密码</th>
+            <th>验证码</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <div class="pager">
+      <span id="pageInfo"></span>
+      <div class="pager-actions">
+        <button class="nav" id="prev" type="button">上一页</button>
+        <button class="nav" id="next" type="button">下一页</button>
+      </div>
+    </div>
+  </main>
+  <script src="crypto.js"></script>
+  <script>
+    const PLATFORMS = ['900', 'uu', 'c5', 'buff'];
+    const state = { page: 1, pageSize: 40, q: '', pages: 1, window: null };
+    let robots = [];
+
+    function secondsLeft() {
+      return 30 - (Math.floor(Date.now() / 1000) % 30);
+    }
+
+    function windowId() {
+      return Math.floor(Date.now() / 1000 / 30);
+    }
+
+    function paintCountdown() {
+      const width = ((secondsLeft() / 30) * 100) + '%';
+      document.querySelectorAll('.code-fill').forEach((fill) => {
+        fill.style.width = width;
+      });
+    }
+
+    function copyText(text, button) {
+      const bridge = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.copy;
+      if (bridge) bridge.postMessage(text);
+      else navigator.clipboard.writeText(text);
+      const old = button.textContent;
+      button.textContent = '已复制';
+      setTimeout(() => { button.textContent = old; }, 800);
+    }
+
+    function pageRows() {
+      const keyword = state.q.toLowerCase();
+      const filtered = keyword
+        ? robots.filter((row) => row.account.toLowerCase().includes(keyword)
+          || row.remark.toLowerCase().includes(keyword)
+          || row.steamId.toLowerCase().includes(keyword)
+          || row.personaName.toLowerCase().includes(keyword))
+        : robots;
+      const total = filtered.length;
+      const pages = Math.max(1, Math.ceil(total / state.pageSize));
+      if (state.page > pages) state.page = pages;
+      if (state.page < 1) state.page = 1;
+      const start = (state.page - 1) * state.pageSize;
+      return { page: state.page, pages, total, rows: filtered.slice(start, start + state.pageSize) };
+    }
+
+    function saveRow(row) {
+      const bridge = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.save;
+      if (!bridge) return;
+      bridge.postMessage({ id: row.id, tags: row.tags, remark: row.remark });
+    }
+
+    function marksCell(row) {
+      const td = document.createElement('td');
+      td.className = 'marks-cell';
+      const wrap = document.createElement('div');
+      wrap.className = 'marks';
+      const tagRow = document.createElement('div');
+      tagRow.className = 'tag-row';
+      PLATFORMS.forEach((name) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'tag' + (row.tags.includes(name) ? ' on' : '');
+        button.textContent = name;
+        button.title = '点击点亮或取消';
+        button.addEventListener('click', () => {
+          if (row.tags.includes(name)) row.tags = row.tags.filter((tag) => tag !== name);
+          else row.tags = PLATFORMS.filter((tag) => tag === name || row.tags.includes(tag));
+          button.classList.toggle('on', row.tags.includes(name));
+          saveRow(row);
+        });
+        tagRow.appendChild(button);
+      });
+      const input = document.createElement('input');
+      input.className = 'remark';
+      input.type = 'text';
+      input.placeholder = '点击填写备注';
+      input.value = row.remark;
+      let timer = 0;
+      input.addEventListener('input', () => {
+        row.remark = input.value;
+        clearTimeout(timer);
+        timer = setTimeout(() => saveRow(row), 300);
+      });
+      input.addEventListener('change', () => {
+        row.remark = input.value;
+        saveRow(row);
+      });
+      wrap.append(tagRow, input);
+      td.appendChild(wrap);
+      return td;
+    }
+
+    function refreshCodes() {
+      document.querySelectorAll('[data-code-id]').forEach((node) => {
+        const row = robots.find((item) => String(item.id) === node.dataset.codeId);
+        if (row) node.textContent = guardCode(row.sharedSecret);
+      });
+      state.window = windowId();
+    }
+
+    function render() {
+      const data = pageRows();
+      state.pages = data.pages;
+      state.window = windowId();
+      document.getElementById('summary').textContent = '共 ' + data.total + ' 条';
+      document.getElementById('pageInfo').textContent = '第 ' + data.page + ' / ' + data.pages + ' 页';
+      document.getElementById('prev').disabled = data.page <= 1;
+      document.getElementById('next').disabled = data.page >= data.pages;
+      const body = document.getElementById('rows');
+      body.replaceChildren();
+      if (!data.rows.length) {
+        body.innerHTML = '<tr><td class="empty" colspan="5">没有匹配的账号</td></tr>';
+        paintCountdown();
+        return;
+      }
+      data.rows.forEach((row) => {
+        const tr = document.createElement('tr');
+        const idCell = document.createElement('td');
+        idCell.className = 'pin pin-id';
+        idCell.textContent = String(row.id);
+        const accountCell = document.createElement('td');
+        accountCell.className = 'pin pin-account';
+        accountCell.appendChild(accountBlock(row));
+        const passwordCell = document.createElement('td');
+        passwordCell.className = 'mono';
+        passwordCell.append(row.password, copyButton(row.password));
+        const codeCell = document.createElement('td');
+        const code = document.createElement('span');
+        code.className = 'code';
+        const fill = document.createElement('span');
+        fill.className = 'code-fill';
+        const text = document.createElement('span');
+        text.className = 'code-text mono';
+        text.dataset.codeId = String(row.id);
+        text.textContent = guardCode(row.sharedSecret);
+        code.append(fill, text);
+        const copy = document.createElement('button');
+        copy.type = 'button';
+        copy.className = 'copy';
+        copy.title = '复制验证码';
+        copy.textContent = '复制';
+        copy.addEventListener('click', () => copyText(text.textContent, copy));
+        codeCell.append(code, copy);
+        tr.append(idCell, accountCell, marksCell(row), passwordCell, codeCell);
+        body.appendChild(tr);
+      });
+      paintCountdown();
+    }
+
+    function accountBlock(row) {
+      const block = document.createElement('div');
+      block.className = 'who';
+      const top = document.createElement('div');
+      top.className = 'who-top';
+      const name = document.createElement('span');
+      name.className = 'who-name';
+      name.textContent = row.account;
+      top.append(name, copyButton(row.account));
+      const cols = document.createElement('div');
+      cols.className = 'who-cols';
+      cols.append(whoColumn('SteamID', row.steamId, true), whoColumn('昵称', row.personaName, false));
+      block.append(top, cols);
+      return block;
+    }
+
+    function whoColumn(label, value, copyable) {
+      const field = document.createElement('div');
+      const title = document.createElement('div');
+      title.className = 'who-k';
+      title.textContent = label;
+      const line = document.createElement('div');
+      line.className = copyable ? 'who-id mono' : 'who-nick';
+      const text = document.createElement('span');
+      text.textContent = value || '—';
+      line.appendChild(text);
+      if (copyable && value) line.appendChild(copyButton(value));
+      field.append(title, line);
+      return field;
+    }
+
+    function copyButton(text) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'copy';
+      button.title = '复制到剪贴板';
+      button.textContent = '复制';
+      button.addEventListener('click', () => copyText(text, button));
+      return button;
+    }
+
+    document.getElementById('prev').addEventListener('click', () => {
+      if (state.page > 1) {
+        state.page -= 1;
+        render();
+      }
+    });
+    document.getElementById('next').addEventListener('click', () => {
+      if (state.page < state.pages) {
+        state.page += 1;
+        render();
+      }
+    });
+    document.getElementById('pageSize').addEventListener('change', (event) => {
+      state.pageSize = Number(event.target.value);
+      state.page = 1;
+      render();
+    });
+    let searchTimer = 0;
+    document.getElementById('q').addEventListener('input', (event) => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        state.q = event.target.value.trim();
+        state.page = 1;
+        render();
+      }, 200);
+    });
+
+    setInterval(() => {
+      paintCountdown();
+      if (state.window != null && windowId() !== state.window) refreshCodes();
+    }, 250);
+
+    try {
+      const rows = window.ROBOT_SOURCE || [];
+      robots = rows.map((row) => ({
+        id: row.id,
+        account: row.steam_account,
+        password: row.pass_word,
+        sharedSecret: row.shared_secret,
+        tags: PLATFORMS.filter((name) => Array.isArray(row.tags) && row.tags.includes(name)),
+        remark: typeof row.remark === 'string' ? row.remark : '',
+        steamId: typeof row.steam_id === 'string' ? row.steam_id : '',
+        personaName: typeof row.persona_name === 'string' ? row.persona_name : ''
+      }));
+      render();
+    } catch (err) {
+      document.getElementById('summary').textContent = err.message || '解密失败';
+    }
+  </script>
+</body>
+</html>
